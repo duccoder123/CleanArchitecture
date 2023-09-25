@@ -79,7 +79,7 @@ namespace CleanArchitecture_Web.Controllers
             Villa? objFrDb = _db.Villas.FirstOrDefault(u => u.Id == obj.Id);
             if (objFrDb is not null)
             {
-                _db.Villas.Remove(obj);
+                _db.Villas.Remove(objFrDb);
                 _db.SaveChanges();
                 TempData["success"] = "Villa Deleted Successfully";
                 return RedirectToAction("Index");
