@@ -44,7 +44,7 @@ namespace CleanArchitecture_Web.Controllers
                 _db.VillaNumber.Add(obj.VillaNumber);
                 _db.SaveChanges();
                 TempData["success"] = "Villa Number Created Successfully";
-                return RedirectToAction("Index");
+                return RedirectToAction(nameof(Index));
             }
             if (roomNumberExists)
             {
@@ -86,7 +86,7 @@ namespace CleanArchitecture_Web.Controllers
                 _db.VillaNumber.Update(obj.VillaNumber);
                 _db.SaveChanges();
                 TempData["success"] = "VillaNumber has been Updated Successfully";
-                return RedirectToAction("Index");
+                return RedirectToAction(nameof(Index));
             }
             obj.VillaList = _db.Villas.ToList().Select(u => new SelectListItem
             {
@@ -124,7 +124,7 @@ namespace CleanArchitecture_Web.Controllers
                 _db.VillaNumber.Remove(objFrDb);
                 _db.SaveChanges();
                 TempData["success"] = "Villa Number Deleted Successfully";
-                return RedirectToAction("Index");
+                return RedirectToAction(nameof(Index));
             }
             TempData["error"] = "The villa number could not be deleted";
             return View();
