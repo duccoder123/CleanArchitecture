@@ -95,21 +95,30 @@ namespace CleanArchitecture_Web.Controllers
             });
             return View(obj);
         }
-        public IActionResult Delete(int villaNumber)
+        public IActionResult Delete(int villaNumberId)
         {
 
-            VillaNumber? obj = _db.VillaNumber.FirstOrDefault(u => u.Villa_Number == villaNumber);
-            if (obj is null)
+            VillaNumberVM villaNumberVM = new()
+            {
+                VillaList = _db.Villas.ToList().Select(u => new SelectListItem
+                {
+                    Text = u.Name,
+                    Value = u.Id.ToString()
+                }),
+                VillaNumber = _db.VillaNumber.FirstOrDefault(u => u.Villa_Number == villaNumberId)
+            };
+
+            if (villaNumberVM.VillaNumber == null)
             {
                 return RedirectToAction("Error", "Home");
             }
-            return View(obj);
+            return View(villaNumberVM);
         }
 
         [HttpPost]
-        public IActionResult Delete(VillaNumber obj)
+        public IActionResult Delete(VillaNumberVM obj)
         {
-            VillaNumber? objFrDb = _db.VillaNumber.FirstOrDefault(u => u.Villa_Number == obj.Villa_Number);
+            VillaNumber? objFrDb = _db.VillaNumber.FirstOrDefault(u => u.Villa_Number == obj.VillaNumber.Villa_Number);
             if (objFrDb is not null)
             {
                 _db.VillaNumber.Remove(objFrDb);
@@ -117,6 +126,7 @@ namespace CleanArchitecture_Web.Controllers
                 TempData["success"] = "Villa Number Deleted Successfully";
                 return RedirectToAction("Index");
             }
+            TempData["error"] = "The villa number could not be deleted";
             return View();
         }
     }
