@@ -11,6 +11,5 @@ namespace WhiteLagoon.Application.Common.Interface
     public interface IVillaRepository : IRepository<Villa>
     {
         void Update(Villa entities);
-        void Save();
     }
 }

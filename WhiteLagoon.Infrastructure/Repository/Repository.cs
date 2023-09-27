@@ -26,6 +26,11 @@ namespace WhiteLagoon.Infrastructure.Repository
             _dbSet.Add(entities);
         }
 
+        public bool Any(Expression<Func<T, bool>> filter)
+        {
+            return _dbSet.Any(filter);
+        }
+
         public T Get(Expression<Func<T, bool>> filter = null, string? includeProperties = null)
         {
             IQueryable<T> query = _dbSet;
@@ -38,7 +43,7 @@ namespace WhiteLagoon.Infrastructure.Repository
                 foreach (var includeProp in includeProperties
                     .Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
                 {
-                    query = query.Include(includeProp);
+                    query = query.Include(includeProp.Trim());
                 }
             }
             return query.FirstOrDefault();
@@ -56,7 +61,7 @@ namespace WhiteLagoon.Infrastructure.Repository
                 foreach (var includeProp in includeProperties
                     .Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
                 {
-                    query = query.Include(includeProp);
+                    query = query.Include(includeProp.Trim());
                 }
             }
             return query.ToList();

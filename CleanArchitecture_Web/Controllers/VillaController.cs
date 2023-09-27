@@ -7,14 +7,14 @@ namespace CleanArchitecture_Web.Controllers
 {
     public class VillaController : Controller
     {
-        private readonly IVillaRepository _villaRepo;
-        public VillaController(IVillaRepository villaRepo)
+        private readonly IUnitOfWork _unitOfWork;
+        public VillaController(IUnitOfWork unitOfWork)
         {
-            _villaRepo = villaRepo;
+            _unitOfWork = unitOfWork;
         }
         public IActionResult Index()
         {
-            var villa = _villaRepo.GetAll();
+            var villa = _unitOfWork.Villa.GetAll();
             return View(villa);
         }
 
@@ -31,8 +31,8 @@ namespace CleanArchitecture_Web.Controllers
             }
             if (ModelState.IsValid)
             {
-                _villaRepo.Add(obj);
-                _villaRepo.Save();
+                _unitOfWork.Villa.Add(obj);
+                _unitOfWork.Save();
                 TempData["success"] = "Villa Created Successfully";
                 return RedirectToAction(nameof(Index));
             }
@@ -42,7 +42,7 @@ namespace CleanArchitecture_Web.Controllers
         public IActionResult Update(int villaId)
         {
 
-            Villa? obj = _villaRepo.Get(u => u.Id == villaId);
+            Villa? obj = _unitOfWork.Villa.Get(u => u.Id == villaId);
             if (obj == null)
             {
                 return RedirectToAction("Error", "Home");
@@ -56,8 +56,8 @@ namespace CleanArchitecture_Web.Controllers
 
             if (ModelState.IsValid)
             {
-                _villaRepo.Update(obj);
-                _villaRepo.Save();
+                _unitOfWork.Villa.Update(obj);
+                _unitOfWork.Save();
                 TempData["success"] = "Villa Updated Successfully";
                 return RedirectToAction(nameof(Index));
             }
@@ -66,7 +66,7 @@ namespace CleanArchitecture_Web.Controllers
         public IActionResult Delete(int villaId)
         {
 
-            Villa? obj = _villaRepo.Get(u => u.Id == villaId);
+            Villa? obj = _unitOfWork.Villa.Get(u => u.Id == villaId);
             if (obj is null)
             {
                 return RedirectToAction("Error", "Home");
@@ -77,11 +77,11 @@ namespace CleanArchitecture_Web.Controllers
         [HttpPost]
         public IActionResult Delete(Villa obj)
         {
-            Villa? objFrDb = _villaRepo.Get(u => u.Id == obj.Id);
+            Villa? objFrDb = _unitOfWork.Villa.Get(u => u.Id == obj.Id);
             if (objFrDb is not null)
             {
-                _villaRepo.Remove(objFrDb);
-                _villaRepo.Save();
+                _unitOfWork.Villa.Remove(objFrDb);
+                _unitOfWork.Save();
                 TempData["success"] = "Villa Deleted Successfully";
                 return RedirectToAction(nameof(Index));
             }
