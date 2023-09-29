@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using System.ComponentModel.DataAnnotations;
 
 namespace CleanArchitecture_Web.ViewModels
 {
@@ -19,6 +20,8 @@ namespace CleanArchitecture_Web.ViewModels
         [Display(Name = "Phone number")]
         public string PhoneNumber { get; set; } 
         public string? RedirectUrl { get; set; }
+        public string? Role { get; set; }
+        public IEnumerable<SelectListItem>? RoleList { get; set; }
 
     }
 }
