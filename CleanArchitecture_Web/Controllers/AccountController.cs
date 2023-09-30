@@ -28,7 +28,7 @@ namespace CleanArchitecture_Web.Controllers
         public IActionResult Login(string returnUrl = null)
         {
             // nếu returnUrl có giá trị khác null thì trả về giá trị của returnUrl còn ko thì trả về Url.Content("~/")
-            returnUrl??= Url.Content("~/");
+            returnUrl ??= Url.Content("~/");
 
             LoginVM loginVM = new()
             {
@@ -36,8 +36,19 @@ namespace CleanArchitecture_Web.Controllers
             };
             return View(loginVM);
         }
-        public IActionResult Register()
+        public async Task<IActionResult> Logout()
         {
+            await _signInManager.SignOutAsync();
+            return RedirectToAction("Index","Home");   
+        }
+
+        public IActionResult AccessDenied()
+        {
+            return View();
+        }
+        public IActionResult Register(string returnUrl = null)
+        {
+            returnUrl ??= Url.Content("~/");
             if (!_roleManager.RoleExistsAsync(SD.Role_Admin).GetAwaiter().GetResult())
             {
                 _roleManager.CreateAsync(new IdentityRole(SD.Role_Admin)).Wait();
@@ -50,7 +61,8 @@ namespace CleanArchitecture_Web.Controllers
                 {
                     Text = x.Name,
                     Value = x.Name
-                })
+                }),
+                RedirectUrl = returnUrl
             };
             return View(registerVM);
         }
@@ -58,38 +70,83 @@ namespace CleanArchitecture_Web.Controllers
         [HttpPost]
         public async Task<IActionResult> Register(RegisterVM registerVM)
         {
-            ApplicationUser user = new()
+            if (ModelState.IsValid)
             {
-                Name = registerVM.Name,
-                Email = registerVM.Email,
-                PhoneNumber = registerVM.PhoneNumber,
-                NormalizedEmail = registerVM.Email.ToUpper(),
-                EmailConfirmed = true,
-                UserName = registerVM.Email,
-                CreateAt = DateTime.Now
-            };
-
-            var result = await _userManager.CreateAsync(user, registerVM.Password);
-            if (result.Succeeded)
-            {
-                if(!string.IsNullOrEmpty(registerVM.Role)) 
+                ApplicationUser user = new()
                 {
-                    await _userManager.AddToRoleAsync(user, registerVM.Role);
+                    Name = registerVM.Name,
+                    Email = registerVM.Email,
+                    PhoneNumber = registerVM.PhoneNumber,
+                    NormalizedEmail = registerVM.Email.ToUpper(),
+                    EmailConfirmed = true,
+                    UserName = registerVM.Email,
+                    CreateAt = DateTime.Now
+                };
+
+                // tạo một một người dùng 
+                var result = await _userManager.CreateAsync(user, registerVM.Password);
+                if (result.Succeeded)
+                {
+                    // nếu trường role có giá trị thì nhận giá trị role đó
+                    if (!string.IsNullOrEmpty(registerVM.Role))
+                    {
+                        await _userManager.AddToRoleAsync(user, registerVM.Role);
+                    }
+                    // ko thì mặc định role là customer
+                    else
+                    {
+                        await _userManager.AddToRoleAsync(user, SD.Role_Customer);
+                    }
+
+                    await _signInManager.SignInAsync(user, isPersistent: false);
+                    if (string.IsNullOrEmpty(registerVM.RedirectUrl))
+                    {
+                        return RedirectToAction("Index", "Home");
+                    }
+                    else
+                    {
+                        return LocalRedirect(registerVM.RedirectUrl);
+                    }
+                }
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError("", error.Description);
+                }
+            }
+            registerVM.RoleList = _roleManager.Roles.Select(x => new SelectListItem
+            {
+                Text = x.Name,
+                Value = x.Name
+            });
+
+            return View(registerVM);
+        }
+        [HttpPost]
+        public async Task<IActionResult> Login(LoginVM loginVM)
+        {
+            if (ModelState.IsValid)
+            {
+                var result = await _signInManager
+                    .PasswordSignInAsync(loginVM.Email, loginVM.Password, loginVM.RememberMe, lockoutOnFailure: false);
+
+
+                if (result.Succeeded)
+                {
+                    if (string.IsNullOrEmpty(loginVM.RedirectUrl))
+                    {
+                        return RedirectToAction("Index", "Home");
+                    }
+                    else
+                    {
+                        return LocalRedirect(loginVM.RedirectUrl);
+                    }
                 }
                 else
                 {
-                    await _userManager.AddToRoleAsync(user, SD.Role_Customer);
+                    ModelState.AddModelError("", "Invalid login attempt.");
                 }
             }
-             registerVM = new()
-            {
-                RoleList = _roleManager.Roles.Select(x => new SelectListItem
-                {
-                    Text = x.Name,
-                    Value = x.Name
-                })
-            };
-            return View(registerVM);
+            return View(loginVM);
         }
     }
 }

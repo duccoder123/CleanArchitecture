@@ -1,4 +1,5 @@
 ﻿using CleanArchitecture_Web.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -9,6 +10,7 @@ using WhiteLagoon.Infrastructure.Data;
 
 namespace CleanArchitecture_Web.Controllers
 {
+    [Authorize]
     public class VillaNumberController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
