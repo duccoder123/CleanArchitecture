@@ -3,6 +3,7 @@ using CleanArchitecture_Web.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 using WhiteLagoon.Application.Common.Interface;
+using WhiteLagoon.Application.Common.Utility;
 
 namespace CleanArchitecture_Web.Controllers
 {
@@ -20,23 +21,23 @@ namespace CleanArchitecture_Web.Controllers
         {
             HomeVM homeVM = new()
             {
-                VillaList = _unitOfWork.Villa.GetAll(includeProperties:"VillaAmenity"),
+                VillaList = _unitOfWork.Villa.GetAll(includeProperties: "VillaAmenity"),
                 Nights = 1,
-                CheckInDate =DateTime.Now,
+                CheckInDate = DateTime.Now,
             };
             return View(homeVM);
         }
         [HttpPost]
         public IActionResult GetVillasByDate(int nights, DateTime checkInDate)
         {
-            Thread.Sleep(2000);
             var villaList = _unitOfWork.Villa.GetAll(includeProperties: "VillaAmenity").ToList();
+            var villaNumberList = _unitOfWork.VillaNumber.GetAll().ToList();
+            var bookedVillas = _unitOfWork.Booking.GetAll(u => u.Status == SD.StatusApproved || u.Status == SD.StatusCheckIn).ToList();
+
             foreach(var villa in villaList)
             {
-                if(villa.Id % 2 != 0)
-                {
-                    villa.IsAvailable = false;
-                }
+               int roomAvailable = SD.VillaRoomsAvailable_Count(villa.Id, villaNumberList, checkInDate, nights, bookedVillas);
+                villa.IsAvailable = roomAvailable > 0?true:false;
             }
             HomeVM homeVM = new()
             {

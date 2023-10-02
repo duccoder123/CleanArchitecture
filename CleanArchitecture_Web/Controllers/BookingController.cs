@@ -35,7 +35,7 @@ namespace CleanArchitecture_Web.Controllers
                 Villa = _unitOfWork.Villa.Get(u=> u.Id == villaId,includeProperties:"VillaAmenity"),
                 CheckInDate = checkInDate,
                 Nights = nights,
-                CheckOuteDate = checkInDate.AddDays(nights),
+                CheckOutDate = checkInDate.AddDays(nights),
                 UserId = userId,
                 Phone = user.PhoneNumber,
                 Email = user.Email,

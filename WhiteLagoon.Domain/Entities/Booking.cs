@@ -34,7 +34,7 @@ namespace WhiteLagoon.Domain.Entities
         [Required]
         public DateTime CheckInDate { get; set; }
         [Required]
-        public DateTime CheckOuteDate { get; set; }
+        public DateTime CheckOutDate { get; set; }
 
         public bool IsPaymentSuccessful { get; set; }
         public DateTime PaymentDate { get; set; }
