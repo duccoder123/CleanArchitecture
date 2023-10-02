@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using WhiteLagoon.Application.Common.Interface;
+using WhiteLagoon.Application.Common.Utility;
 using WhiteLagoon.Domain.Entities;
 
 namespace CleanArchitecture_Web.Controllers
@@ -33,8 +34,27 @@ namespace CleanArchitecture_Web.Controllers
                 Name = user.Name
             };
             booking.TotalCost = booking.Villa.Price * nights;
-            return View(booking)
-;
+            return View(booking);
+        }
+
+        [Authorize]
+        [HttpPost]
+        public IActionResult FinalizeBooking(Booking booking)
+        {
+            var villa = _unitOfWork.Villa.Get(u => u.Id == booking.VillaId);
+            booking.TotalCost = villa.Price * booking.Nights;
+
+            booking.Status = SD.StatusPending;
+            booking.BookingDate  = DateTime.Now;
+            _unitOfWork.Booking.Add(booking);
+            _unitOfWork.Save();
+            return RedirectToAction(nameof(BookingConfirmation),  new {bookingId = booking.Id });
+        }
+
+        [Authorize]
+        public IActionResult BookingConfirmation(int bookingId)
+        {
+            return View(bookingId);
         }
     }
 }
