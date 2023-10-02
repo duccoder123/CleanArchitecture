@@ -9,6 +9,7 @@ using WhiteLagoon.Domain.Entities;
 
 namespace CleanArchitecture_Web.Controllers
 {
+    
     public class BookingController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -16,7 +17,7 @@ namespace CleanArchitecture_Web.Controllers
         {
             _unitOfWork = unitOfWork;
         }
-
+        [Authorize]
         public IActionResult Index()
         {
             return View();
@@ -105,10 +106,18 @@ namespace CleanArchitecture_Web.Controllers
             return View(bookingId);
         }
 
+        [Authorize]
+        public IActionResult BookingDetails(int bookingId)
+        {
+            Booking bookingFromDb = _unitOfWork.Booking.Get(u => u.Id == bookingId, 
+                includeProperties: "User,Villa");
+            return View(bookingFromDb);
+        }
+
         #region API Calls
         [HttpGet]
         [Authorize]
-        public IActionResult GetAll()
+        public IActionResult GetAll(string status)
         {
             IEnumerable<Booking> objBooking;
             if (User.IsInRole(SD.Role_Admin)){
@@ -121,6 +130,10 @@ namespace CleanArchitecture_Web.Controllers
 
                 objBooking = _unitOfWork.Booking
                     .GetAll(u => u.UserId == userId, includeProperties: "User,Villa");
+            }
+            if (!string.IsNullOrEmpty(status))
+            {
+                objBooking = objBooking.Where(u => u.Status.ToLower().Equals(status.ToLower()));
             }
             return Json(new { data = objBooking });
         }
