@@ -16,6 +16,11 @@ namespace CleanArchitecture_Web.Controllers
         {
             _unitOfWork = unitOfWork;
         }
+
+        public IActionResult Index()
+        {
+            return View();
+        }
         [Authorize]
         public IActionResult FinalizeBooking(int villaId, DateTime checkInDate, int nights)
         {
@@ -99,5 +104,26 @@ namespace CleanArchitecture_Web.Controllers
             }
             return View(bookingId);
         }
+
+        #region API Calls
+        [HttpGet]
+        [Authorize]
+        public IActionResult GetAll()
+        {
+            IEnumerable<Booking> objBooking;
+            if (User.IsInRole(SD.Role_Admin)){
+                objBooking = _unitOfWork.Booking.GetAll(includeProperties:"User,Villa");
+            }
+            else
+            {
+                var claimsIdentity = (ClaimsIdentity)User.Identity;
+                var userId = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier).Value;
+
+                objBooking = _unitOfWork.Booking
+                    .GetAll(u => u.UserId == userId, includeProperties: "User,Villa");
+            }
+            return Json(new { data = objBooking });
+        }
+        #endregion
     }
 }
