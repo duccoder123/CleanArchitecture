@@ -9,7 +9,7 @@ using WhiteLagoon.Domain.Entities;
 
 namespace CleanArchitecture_Web.Controllers
 {
-    
+
     public class BookingController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -32,7 +32,7 @@ namespace CleanArchitecture_Web.Controllers
             Booking booking = new()
             {
                 VillaId = villaId,
-                Villa = _unitOfWork.Villa.Get(u=> u.Id == villaId,includeProperties:"VillaAmenity"),
+                Villa = _unitOfWork.Villa.Get(u => u.Id == villaId, includeProperties: "VillaAmenity"),
                 CheckInDate = checkInDate,
                 Nights = nights,
                 CheckOutDate = checkInDate.AddDays(nights),
@@ -53,31 +53,48 @@ namespace CleanArchitecture_Web.Controllers
             booking.TotalCost = villa.Price * booking.Nights;
 
             booking.Status = SD.StatusPending;
-            booking.BookingDate  = DateTime.Now;
+            booking.BookingDate = DateTime.Now;
+
+            var villaNumberList = _unitOfWork.VillaNumber.GetAll().ToList();
+            var bookedVillas = _unitOfWork.Booking.GetAll(u => u.Status == SD.StatusApproved || u.Status == SD.StatusCheckIn).ToList();
+
+            int roomAvailable = SD.VillaRoomsAvailable_Count(villa.Id, villaNumberList, booking.CheckInDate, booking.Nights, bookedVillas);
+
+            if(roomAvailable == 0)
+            {
+                TempData["success"] = "Room has been sold out";
+                return RedirectToAction(nameof(FinalizeBooking), new
+                {
+                    villaId = booking.VillaId,
+                    checkIndDate = booking.CheckInDate,
+                    nights = booking.Nights
+                });
+            }
+
             _unitOfWork.Booking.Add(booking);
             _unitOfWork.Save();
 
             var domain = Request.Scheme + "://" + Request.Host.Value + "/";
             var options = new SessionCreateOptions
             {
-               LineItems = new List<SessionLineItemOptions>(),
+                LineItems = new List<SessionLineItemOptions>(),
                 Mode = "payment",
                 SuccessUrl = domain + $"booking/BookingConfirmation?bookingId={booking.Id}",
                 CancelUrl = domain + $"booking/FinalizeBooking?villaId{booking.VillaId}&checkInDate={booking.CheckInDate}&night={booking.Nights}",
             };
             options.LineItems.Add(new SessionLineItemOptions
             {
-                PriceData =new SessionLineItemPriceDataOptions
+                PriceData = new SessionLineItemPriceDataOptions
                 {
                     UnitAmount = (long)(booking.TotalCost * 100),
                     Currency = "usd",
                     ProductData = new SessionLineItemPriceDataProductDataOptions
                     {
-                        Name= villa.Name,
+                        Name = villa.Name,
                         //Images = new List<string> { domain + villa.ImageUrl},
                     },
                 },
-                Quantity =1
+                Quantity = 1
             });
             var service = new SessionService();
             Session session = service.Create(options);
@@ -92,13 +109,13 @@ namespace CleanArchitecture_Web.Controllers
         public IActionResult BookingConfirmation(int bookingId)
         {
             Booking bookingFrDb = _unitOfWork.Booking.Get(u => u.Id == bookingId, includeProperties: "User,Villa");
-            if(bookingFrDb.Status == SD.StatusPending)
+            if (bookingFrDb.Status == SD.StatusPending)
             {
                 var service = new SessionService();
                 Session session = service.Get(bookingFrDb.StripeSessionId);
-                if(session.PaymentStatus == "paid")
+                if (session.PaymentStatus == "paid")
                 {
-                    _unitOfWork.Booking.UpdateStatus(bookingFrDb.Id, SD.StatusApproved,0);
+                    _unitOfWork.Booking.UpdateStatus(bookingFrDb.Id, SD.StatusApproved, 0);
                     _unitOfWork.Booking.UpdateStripePaymentID(bookingFrDb.Id, session.Id, session.PaymentIntentId);
                     _unitOfWork.Save();
                 }
@@ -109,9 +126,9 @@ namespace CleanArchitecture_Web.Controllers
         [Authorize]
         public IActionResult BookingDetails(int bookingId)
         {
-            Booking bookingFromDb = _unitOfWork.Booking.Get(u => u.Id == bookingId, 
+            Booking bookingFromDb = _unitOfWork.Booking.Get(u => u.Id == bookingId,
                 includeProperties: "User,Villa");
-            if(bookingFromDb.VillaNumber == 0 &&bookingFromDb.Status == SD.StatusApproved)
+            if (bookingFromDb.VillaNumber == 0 && bookingFromDb.Status == SD.StatusApproved)
             {
                 var availableVillaNumber = AssignAvailableVillaNumberByVilla(bookingFromDb.VillaId);
 
@@ -122,13 +139,43 @@ namespace CleanArchitecture_Web.Controllers
         }
 
 
+        [HttpPost]
+        [Authorize(Roles = SD.Role_Admin)]
+        public IActionResult CheckIn(Booking booking)
+        {
+            _unitOfWork.Booking.UpdateStatus(booking.Id, SD.StatusCheckIn, booking.VillaNumber);
+            _unitOfWork.Save();
+            TempData["success"] = "Booking Updated Successfully";
+            return RedirectToAction(nameof(BookingDetails), new { bookingId = booking.Id });
+        }
+
+        [HttpPost]
+        [Authorize(Roles = SD.Role_Admin)]
+        public IActionResult CheckOut(Booking booking)
+        {
+            _unitOfWork.Booking.UpdateStatus(booking.Id, SD.StatusCompleted, booking.VillaNumber);
+            _unitOfWork.Save();
+            TempData["success"] = "Booking Completed Successfully";
+            return RedirectToAction(nameof(BookingDetails), new { bookingId = booking.Id });
+        }
+
+        [HttpPost]
+        [Authorize(Roles = SD.Role_Admin)]
+        public IActionResult CancelBooking(Booking booking)
+        {
+            _unitOfWork.Booking.UpdateStatus(booking.Id, SD.StatusCancelled, 0);
+            _unitOfWork.Save();
+            TempData["success"] = "Booking Cancelled Successfully";
+            return RedirectToAction(nameof(BookingDetails), new { bookingId = booking.Id });
+        }
+
         private List<int> AssignAvailableVillaNumberByVilla(int villaId)
         {
             List<int> availableVillaNumbers = new();
             var villaNumbers = _unitOfWork.VillaNumber.GetAll(u => u.VillaId == villaId);
             var checkedInVilla = _unitOfWork.Booking.GetAll(u => u.VillaId == villaId && u.Status == SD.StatusCheckIn)
                 .Select(u => u.VillaNumber);
-            foreach(var villaNumber in villaNumbers)
+            foreach (var villaNumber in villaNumbers)
             {
                 if (!checkedInVilla.Contains(villaNumber.Villa_Number))
                 {
@@ -145,8 +192,9 @@ namespace CleanArchitecture_Web.Controllers
         public IActionResult GetAll(string status)
         {
             IEnumerable<Booking> objBooking;
-            if (User.IsInRole(SD.Role_Admin)){
-                objBooking = _unitOfWork.Booking.GetAll(includeProperties:"User,Villa");
+            if (User.IsInRole(SD.Role_Admin))
+            {
+                objBooking = _unitOfWork.Booking.GetAll(includeProperties: "User,Villa");
             }
             else
             {
