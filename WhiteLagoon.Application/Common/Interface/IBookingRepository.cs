@@ -10,7 +10,7 @@ namespace WhiteLagoon.Application.Common.Interface
     public interface IBookingRepository : IRepository<Booking>
     {
         void Update(Booking entities);
-        void UpdateStatus(int bookingId, string orderStatus);
+        void UpdateStatus(int bookingId, string orderStatus, int villaNumber);
         void UpdateStripePaymentID(int bookingId,    string sessionId, string paymentIntentId); 
     }
 }
