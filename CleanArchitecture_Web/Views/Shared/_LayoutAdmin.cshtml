@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="~/css/spinner.css" />
     @* datatable *@
     <link rel="stylesheet" href="//cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
-    <link rel="stylesheet" href="~/css/apexcharts.css" />
+    <link href="~/css/apexcharts.css" rel="stylesheet" />
 
 </head>
 <body>
@@ -109,7 +109,6 @@
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="//cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js" asp-append-version="true"></script>
     <script src="~/js/apexcharts.js"></script>
-
     @* <script src="~/jquery-ajax-unobtrusive/dist/jquery.unobtrusive-ajax.min.js"></script> *@
     @await RenderSectionAsync("Scripts", required: false)
 </body>

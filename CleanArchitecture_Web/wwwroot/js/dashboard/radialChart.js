@@ -1,42 +1,40 @@
 ﻿function loadRadialBarChart(id, data) {
-    var charColors = getChartColorsArray(id);
+    var chartColors = getChartColorsArray(id);
     var options = {
         fill: {
-            colors = charColors;
+            colors: chartColors
         },
         chart: {
-            height: 120,
+            height: 90,
             width: 90,
             type: "radialBar",
             sparkline: {
-                enable: true
+                enabled: true
             },
             offsetY: -10,
         },
-
         series: data.series,
-
         plotOptions: {
             radialBar: {
                 dataLabels: {
                     value: {
                         offsetY: -10,
+                        color: chartColors[0],
                     }
                 }
             }
         },
-        labels: [""],
-        stroke: {
-            lineCap: "round",
-        },
+        labels: [""]
     };
     var chart = new ApexCharts(document.querySelector("#" + id), options);
     chart.render();
+
 }
 
+
 function getChartColorsArray(id) {
-    if (document.getElementById(id) != null) {
-        var color = document.getElementById(id).getAttribute("data-colors");
+    if (document.getElementById(id) !== null) {
+        var colors = document.getElementById(id).getAttribute("data-colors");
         if (colors) {
             colors = JSON.parse(colors);
             return colors.map(function (value) {
@@ -46,7 +44,8 @@ function getChartColorsArray(id) {
                     if (color) return color;
                     else return newValue;
                 }
-            })
+            });
         }
+
     }
 }
