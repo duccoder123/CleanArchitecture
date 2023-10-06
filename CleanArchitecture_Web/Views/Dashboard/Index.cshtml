@@ -1,5 +1,5 @@
 ﻿<div class="container-fluid">
-    <div class="row">
+    <div class="row pb-0">
         <div class="page-title-box d-flex align-items-center justify-content-between">
             <h4 class="mb-0">Dashboard</h4>
         </div>
@@ -70,6 +70,36 @@
                 </div>
             </div>
         </div>
+
+        <div class="col-md-12 col-xl-8 mt-2">
+            <div class="card">
+                <div class="card-body">
+
+                    <div class="justify-content-center text-center chart-spinner " style="display:none;">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-12 col-xl-4 mt-2">
+            <div class="card">
+                <div class="card-body">
+                    <div class="">
+                        <p class="text-muted">Customer Bookings</p>
+                    </div>
+                    <div id="customerBookingsPieChart" data-colors='["--bs-warning","--bs-primary"]'>
+                    </div>
+                    <div class="justify-content-center text-center chart-spinner " style="display:none;">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -78,5 +108,5 @@
     <script src="~/js/dashboard/gettotaluserradial.js"></script>
     <script src="~/js/dashboard/gettotalrevenueradial.js"></script>
     <script src="~/js/dashboard/radialchart.js"></script>
-  
+    <script src="~/js/dashboard/getCustomerBookingPieChart.js"></script>
                     }
