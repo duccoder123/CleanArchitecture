@@ -2,6 +2,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Stripe;
 using Stripe.Checkout;
+using Syncfusion.DocIO;
+using Syncfusion.DocIO.DLS;
+using Syncfusion.DocIORenderer;
 using System.Security.Claims;
 using WhiteLagoon.Application.Common.Interface;
 using WhiteLagoon.Application.Common.Utility;
@@ -13,9 +16,11 @@ namespace CleanArchitecture_Web.Controllers
     public class BookingController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
-        public BookingController(IUnitOfWork unitOfWork)
+        private readonly IWebHostEnvironment _webHostEnviroment;
+        public BookingController(IUnitOfWork unitOfWork, IWebHostEnvironment webHostEnvironment)
         {
             _unitOfWork = unitOfWork;
+            _webHostEnviroment = webHostEnvironment;
         }
         [Authorize]
         public IActionResult Index()
@@ -137,6 +142,29 @@ namespace CleanArchitecture_Web.Controllers
             }
             return View(bookingFromDb);
         }
+
+        [HttpPost]
+        [Authorize]
+        public IActionResult GenerateInvoice(int id)
+        {
+            string basePath = _webHostEnviroment.WebRootPath;
+            WordDocument document = new WordDocument();
+            string dataPath = basePath + @"/exports/BookingDetails.docx";
+            using FileStream fileStream = new(dataPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            document.Open(fileStream, FormatType.Automatic);
+            Booking bookingFrDb = _unitOfWork.Booking.Get(u => u.Id == id,
+                includeProperties: "User,Villa");
+            TextSelection textSelection = document.Find("xx_customer_name", false, true);
+            WTextRange textRange = textSelection.GetAsOneRange();
+            textRange.Text = bookingFrDb.Name;
+
+            using DocIORenderer renderer = new();
+            MemoryStream stream = new();
+            document.Save(stream, FormatType.Docx);
+            stream.Position = 0;
+            return File(stream, "application/docx", "BookingDetails.docx");
+        }
+
 
 
         [HttpPost]
