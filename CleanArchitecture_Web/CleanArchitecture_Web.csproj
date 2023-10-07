@@ -32,4 +32,12 @@
     </Content>
   </ItemGroup>
 
+  <ItemGroup>
+    <EditorConfigFiles Remove="D:\Lab\Hands-on-Lab\CleanArchitecture\CleanArchitecture_Web\ViewModels\.editorconfig" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="D:\Lab\Hands-on-Lab\CleanArchitecture\CleanArchitecture_Web\ViewModels\.editorconfig" />
+  </ItemGroup>
+
 </Project>
