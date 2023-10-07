@@ -80,7 +80,7 @@ namespace CleanArchitecture_Web.Controllers
 
         [HttpPost]
         public IActionResult Update(AmenityVM obj)
-        {
+            {
            
             if (ModelState.IsValid)
             {
