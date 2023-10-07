@@ -28,9 +28,17 @@
                 <form method="post">
                     <div class="row pt-1 mb-3" style="border-radius:20px;">
                         <div class="col-12 text-center">
-                            <button asp-action="GenerateInvoice" asp-route-id="@Model.Id" type="submit"
-                            class="btn btn-sm btn-secondary my-1">
-                            <i class="bi bi-file-earmark-word"></i>Generate Invoice
+                            <button asp-action="GenerateInvoice" asp-route-id="@Model.Id"
+                                    asp-route-downloadType="word"
+                                    type="submit"
+                                    class="btn btn-sm btn-secondary my-1">
+                                <i class="bi bi-file-earmark-word"></i>Generate Invoice
+                            </button>
+                            <button asp-action="GenerateInvoice" asp-route-id="@Model.Id"
+                                    asp-route-downloadType="pdf" 
+                                    type="submit"
+                                    class="btn btn-sm btn-secondary my-1">
+                                <i class="bi bi-file-earmark-pdf"></i>Generate Invoice (PDF)
                             </button>
                         </div>
                     </div>
@@ -111,12 +119,12 @@
                         <label class="text-warning">Actual Check-out Date</label>
                         <input asp-for="ActualCheckOutDate" disabled class="form-control" />
                     </div>
-                    @if(Model.Status == SD.StatusApproved && User.IsInRole(SD.Role_Admin))
-                        {
-                    <div class="form-group pt-2 col-6">
-                        <label class="text-danger" asp-for="VillaNumber"></label>
+                    @if (Model.Status == SD.StatusApproved && User.IsInRole(SD.Role_Admin))
+                    {
+                        <div class="form-group pt-2 col-6">
+                            <label class="text-danger" asp-for="VillaNumber"></label>
                             <select class="form-select" asp-for="VillaNumber">
-                                @foreach(var item in Model.VillaNumbers)
+                                @foreach (var item in Model.VillaNumbers)
                                 {
                                     <option value="@item.Villa_Number">@item.Villa_Number</option>
                                 }
@@ -126,7 +134,7 @@
                     else
                     {
                         <input asp-for="VillaNumber" hidden />
-                        @if(Model.Status==SD.StatusCheckIn || Model.Status == SD.StatusCompleted)
+                        @if (Model.Status == SD.StatusCheckIn || Model.Status == SD.StatusCompleted)
                         {
                             <div class="form-group pt-2 col-6">
                                 <label class="text-warning">Villa Number</label>

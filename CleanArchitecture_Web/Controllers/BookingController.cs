@@ -148,7 +148,7 @@ namespace CleanArchitecture_Web.Controllers
 
         [HttpPost]
         [Authorize]
-        public IActionResult GenerateInvoice(int id)
+        public IActionResult GenerateInvoice(int id, string downloadType)
         {
             string basePath = _webHostEnviroment.WebRootPath;
             WordDocument document = new WordDocument();
@@ -201,7 +201,8 @@ namespace CleanArchitecture_Web.Controllers
             table.TableFormat.Paddings.Bottom = 7f;
             table.TableFormat.Borders.Horizontal.LineWidth = 1f;
 
-            table.ResetCells(2, 4);
+            int rows = bookingFrDb.VillaNumber > 0 ? 3 : 2;
+            table.ResetCells(rows, 4);
             WTableRow row0 = table.Rows[0];
 
             row0.Cells[0].AddParagraph().AppendText("NIGHT");
@@ -222,6 +223,27 @@ namespace CleanArchitecture_Web.Controllers
             row1.Cells[3].AddParagraph().AppendText(bookingFrDb.TotalCost.ToString("c"));
             row1.Cells[3].Width = 80;
 
+            if(bookingFrDb.VillaNumber > 0)
+            {
+                WTableRow row2 = table.Rows[1];
+                row1.Cells[0].Width = 80;
+                row2.Cells[1].AddParagraph().AppendText("Villa Number - " + bookingFrDb.VillaNumber.ToString());
+                row2.Cells[1].Width = 220;
+                row2.Cells[3].Width = 80;
+            }
+
+            WTableStyle tableStyle = document.AddTableStyle("CustomStyle") as WTableStyle;
+            tableStyle.TableProperties.RowStripe = 1;
+            tableStyle.TableProperties.ColumnStripe = 2;
+            tableStyle.TableProperties.Paddings.Top = 2;
+            tableStyle.TableProperties.Paddings.Bottom = 1;
+            tableStyle.TableProperties.Paddings.Left = 5.4f;
+            tableStyle.TableProperties.Paddings.Right = 5.4f;
+
+
+            ConditionalFormattingStyle firstRowStyle = tableStyle.ConditionalFormattingStyles.Add(ConditionalFormattingType.FirstRow);
+            firstRowStyle.CharacterFormat.Bold = true;
+
             TextBodyPart bodyPart = new(document);
             bodyPart.BodyItems.Add(table);
 
@@ -229,9 +251,21 @@ namespace CleanArchitecture_Web.Controllers
 
             using DocIORenderer renderer = new();
             MemoryStream stream = new();
+
+            if (downloadType == "word")
+            {
             document.Save(stream, FormatType.Docx);
             stream.Position = 0;
             return File(stream, "application/docx", "BookingDetails.docx");
+            }
+            else
+            {
+                PdfDocument pdfDocument = renderer.ConvertToPDF(document);
+                pdfDocument.Save(stream);
+                stream.Position = 0;
+
+                return File(stream, "application/pdf", "BookingDetails.pdf");
+            }
         }
 
 
