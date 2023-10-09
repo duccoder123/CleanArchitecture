@@ -91,6 +91,45 @@ namespace CleanArchitecture_Web.Controllers
                 shape.TextBody.Text = string.Format("Price Per Night : {0} adults", villa.Price.ToString("c")); ;
             }
 
+            shape = slide.Shapes.FirstOrDefault(u=> u.ShapeName == "txtVillaAmenitiesHeading") as IShape;
+            if (shape is not null)
+            {
+                List<string> listItems = villa.VillaAmenity.Select(x => x.Name).ToList();
+                shape.TextBody.Text = "";
+
+                foreach(var item in listItems)
+                {
+                    IParagraph paraGraph = shape.TextBody.AddParagraph();
+                    ITextPart textPart = paraGraph.AddTextPart(item);
+
+                    paraGraph.ListFormat.Type = ListType.Bulleted;
+                    paraGraph.ListFormat.BulletCharacter = '\u2022';
+                    textPart.Font.FontName = "system-ui";
+                    textPart.Font.FontSize = 18;
+                    textPart.Font.Color = ColorObject.FromArgb(14, 148, 152);
+                }
+            }
+
+            shape = slide.Shapes.FirstOrDefault(u => u.ShapeName == "imgVilla") as IShape;
+            if (shape is not null)
+            {
+                byte[] imageData;
+                string imageUrl;
+                try
+                {
+                    imageUrl = string.Format("{0}{1}", basePath, villa.ImageUrl);
+                    imageData = System.IO.File.ReadAllBytes(imageUrl);
+                }
+                catch (Exception)
+                {
+                    imageUrl = string.Format("{0}{1}", basePath, "/images/placeholder.png");
+                    imageData = System.IO.File.ReadAllBytes(imageUrl);
+                }
+                slide.Shapes.Remove(shape);
+                using MemoryStream  imageStream = new(imageData);
+                IPicture newPicture = slide.Pictures.AddPicture(imageStream, 60, 120, 300, 200);
+            }
+
             MemoryStream stream = new();
             presentation.Save(stream);
             stream.Position = 0;
