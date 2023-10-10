@@ -13,11 +13,11 @@ namespace WhiteLagoon.Infrastructure.Data
 {
     public class DbInitializer : IDbInitializer
     {
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly ApplicationDbContext _context;
         private readonly RoleManager<IdentityRole> _roleManager;
         public DbInitializer(ApplicationDbContext context,
-            UserManager<IdentityUser> userManager,
+            UserManager<ApplicationUser> userManager,
             RoleManager<IdentityRole> roleManager)
         {
             _context = context;
@@ -46,7 +46,8 @@ namespace WhiteLagoon.Infrastructure.Data
                         NormalizedEmail = "ADMIN@GMAIL.COM",
                         PhoneNumber = "123456789",
                     }, "Admin@123").GetAwaiter().GetResult();
-
+                    ApplicationUser user = _context.ApplicationUsers.FirstOrDefault(u => u.Email == "admin@gmail.com");
+                    _userManager.AddToRoleAsync(user, SD.Role_Admin).GetAwaiter().GetResult();
                 }
             }
             catch(Exception ex)
