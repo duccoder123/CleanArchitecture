@@ -6,23 +6,26 @@ using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using WhiteLagoon.Application.Common.Interface;
 using WhiteLagoon.Application.Common.Utility;
+using WhiteLagoon.Application.Services.Interface;
 using WhiteLagoon.Domain.Entities;
 using WhiteLagoon.Infrastructure.Data;
 
 namespace CleanArchitecture_Web.Controllers
 {
     // người dùng có role là admin mới có thể truy cập controller này
-    [Authorize(Roles =SD.Role_Admin)]
+    [Authorize(Roles = SD.Role_Admin)]
     public class AmenityController : Controller
     {
-        private readonly IUnitOfWork _unitOfWork;
-        public AmenityController(IUnitOfWork unitOfWork)
+        private readonly IAmenityService _amenityService;
+        private readonly IVillaService _villaService;
+        public AmenityController(IAmenityService amenityService, IVillaService villaService)
         {
-            _unitOfWork = unitOfWork;
+            _amenityService = amenityService;
+            _villaService = villaService;
         }
         public IActionResult Index()
         {
-            var amenity = _unitOfWork.Amenity.GetAll(includeProperties:"Villa");
+            var amenity = _amenityService.GetAllAmenity();
             return View(amenity);
         }
 
@@ -30,7 +33,7 @@ namespace CleanArchitecture_Web.Controllers
         {
             AmenityVM amenityVM = new()
             {
-                VillaList = _unitOfWork.Villa.GetAll().Select(u => new SelectListItem
+                VillaList = _villaService.GetAllVillas().Select(u => new SelectListItem
                 {
                     Text = u.Name,
                     Value = u.Id.ToString()
@@ -43,15 +46,14 @@ namespace CleanArchitecture_Web.Controllers
         {
 
 
-            if (ModelState.IsValid )
+            if (ModelState.IsValid)
             {
-               _unitOfWork.Amenity.Add(obj.Amenity);
-                _unitOfWork.Save();
+                _amenityService.CreateAmenity(obj.Amenity);
                 TempData["success"] = "Amenity Created Successfully";
                 return RedirectToAction(nameof(Index));
             }
-            
-            obj.VillaList = _unitOfWork.Villa.GetAll().Select(u => new SelectListItem
+
+            obj.VillaList = _villaService.GetAllVillas().Select(u => new SelectListItem
             {
                 Text = u.Name,
                 Value = u.Id.ToString()
@@ -63,12 +65,12 @@ namespace CleanArchitecture_Web.Controllers
         {
             AmenityVM amenityVM = new()
             {
-                VillaList = _unitOfWork.Villa.GetAll().Select(u => new SelectListItem
+                VillaList = _villaService.GetAllVillas().Select(u => new SelectListItem
                 {
                     Text = u.Name,
                     Value = u.Id.ToString()
                 }),
-                Amenity = _unitOfWork.Amenity.Get(u => u.Id == amenityId)
+                Amenity = _amenityService.GetAmenityById(amenityId)
             };
 
             if (amenityVM.Amenity == null)
@@ -80,16 +82,15 @@ namespace CleanArchitecture_Web.Controllers
 
         [HttpPost]
         public IActionResult Update(AmenityVM obj)
-            {
-           
+        {
+
             if (ModelState.IsValid)
             {
-                _unitOfWork.Amenity.Update(obj.Amenity);
-                _unitOfWork.Save();
+                _amenityService.UpdateAmenity(obj.Amenity);
                 TempData["success"] = "VillaNumber has been Updated Successfully";
                 return RedirectToAction(nameof(Index));
             }
-            obj.VillaList = _unitOfWork.Villa.GetAll().Select(u => new SelectListItem
+            obj.VillaList = _villaService.GetAllVillas().Select(u => new SelectListItem
             {
                 Text = u.Name,
                 Value = u.Id.ToString()
@@ -101,12 +102,12 @@ namespace CleanArchitecture_Web.Controllers
 
             AmenityVM amenityVM = new()
             {
-                VillaList = _unitOfWork.Villa.GetAll().Select(u => new SelectListItem
+                VillaList = _villaService.GetAllVillas().Select(u => new SelectListItem
                 {
                     Text = u.Name,
                     Value = u.Id.ToString()
                 }),
-                Amenity = _unitOfWork.Amenity.Get(u => u.Id == amenityId)
+                Amenity = _amenityService.GetAmenityById(amenityId),
 
             };
 
@@ -120,14 +121,18 @@ namespace CleanArchitecture_Web.Controllers
         [HttpPost]
         public IActionResult Delete(AmenityVM obj)
         {
-            Amenity? objFrDb = _unitOfWork.Amenity.Get(u => u.Id == obj.Amenity.Id);
-            if (objFrDb is not null)
+            bool result = _amenityService.DeleteAmenity(obj.Amenity.Id);
+
+            if (result)
             {
-               _unitOfWork.Amenity.Remove(objFrDb);
-               _unitOfWork.Save();
                 TempData["success"] = "Villa Number Deleted Successfully";
                 return RedirectToAction(nameof(Index));
             }
+            else
+            {
+                TempData["error"] = "Villa NUmber Deleted Failed";
+            }
+
             TempData["error"] = "The villa number could not be deleted";
             return View();
         }

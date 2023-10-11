@@ -32,6 +32,8 @@ builder.Services.AddScoped<IDashboardService,DashboardService>();
 builder.Services.AddScoped<IDbInitializer, DbInitializer>();
 builder.Services.AddScoped<IVillaService, VillaService>();
 builder.Services.AddScoped<IVillaNumberService, VillaNumberService>();
+builder.Services.AddScoped<IAmenityService, AmenityService>();
+
 
 
 var app = builder.Build();
